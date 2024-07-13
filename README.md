@@ -7,4 +7,4 @@ Or you can just use one of the latest release
 
 
 Example:
-![](https://github.com/R0uT3r52/Video2ASCII/blob/main/gif/02dance.gif)
+![](https://github.com/R0uT3r52/Video2ASCII/blob/main/gif/haise.gif)
