@@ -6,6 +6,7 @@ Build:
 2. Set building target **Release/x64**
 3. Build the solution
 4. Create *videos* directory next to the application
+5. Put your videos into *videos* directory and run the application
 
 Or you can just use one of the latest release
 
