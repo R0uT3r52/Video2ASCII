@@ -1,0 +1,10 @@
+IlmImf.lib
+libjpeg-turbo.lib
+libopenjp2.lib
+libpng.lib
+libwebp.lib
+opencv_core480.lib
+opencv_imgcodecs480.lib
+opencv_imgproc480.lib
+opencv_videoio480.lib
+zlib.lib

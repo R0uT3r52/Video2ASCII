@@ -71,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>C:\C++\opencv_static\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\C++\opencv_static\x64\vc17\staticlib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)opencv_lib\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)opencv_lib\staticlib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;CMAKE_CXX_FLAGS_RELEASE= -DNDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\C++\cv\opencv\build\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)opencv_lib\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -131,8 +131,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\C++\opencv_static\x64\vc17\staticlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ade.lib;IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libclapack.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libprotobuf.lib;libtiff.lib;libwebp.lib;opencv_3d500.lib;opencv_calib500.lib;opencv_core500.lib;opencv_dnn500.lib;opencv_features2d500.lib;opencv_flann500.lib;opencv_gapi500.lib;opencv_highgui500.lib;opencv_imgcodecs500.lib;opencv_imgproc500.lib;opencv_ml500.lib;opencv_objdetect500.lib;opencv_photo500.lib;opencv_stereo500.lib;opencv_stitching500.lib;opencv_video500.lib;opencv_videoio500.lib;quirc.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)opencv_lib\staticlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>IlmImf.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libwebp.lib;opencv_core480.lib;opencv_imgcodecs480.lib;opencv_imgproc480.lib;opencv_videoio480.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

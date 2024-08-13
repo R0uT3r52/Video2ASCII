@@ -1,13 +1,15 @@
-﻿#include <iostream>
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
 #include <chrono>
 #include <fstream>
 #include <thread>
 #include <windows.h>
+#include <cwchar>
 #include <filesystem>
 #include <opencv2/opencv.hpp>
 using namespace std;
 
-int frame_dur = -1;
+int frame_dur = -1, width = 540, height = 180; // set default values
 
 string ascii_alphabet = "";
 
@@ -15,75 +17,12 @@ string videos_folder = "videos";
 
 bool cycle = true;
 
-//bool config_exist(string path) {
-//	ifstream f(path);
-//	return f.good();
-//}
-//
-//void read_config(string path) {
-//
-//	if (config_exist(path)) {
-//		fstream config(path);
-//		string tmp;
-//
-//		while (getline(config, tmp)) {
-//			if (tmp[0] == '#') continue;
-//
-//			if (tmp.find("alphabet") != string::npos && tmp[0] != '#' && tmp[0] != ' ') {
-//				tmp.erase(tmp.begin(), tmp.begin() + tmp.find("= "));
-//				ascii_alphabet = tmp;
-//			}
-//			if (tmp.find("frame_duration") != string::npos && tmp[0] != '#') {
-//				tmp.erase(tmp.begin(), tmp.begin() + tmp.find("= "));
-//				if (tmp.length() != 0 && tmp[0] != ' ') frame_dur = stoi(tmp);
-//			}
-//			if (tmp.find("cycle") != string::npos && tmp[0] != '#') {
-//				tmp.erase(tmp.begin(), tmp.begin() + tmp.find("= "));
-//				if (tmp.find("true") != string::npos) cycle = true;
-//			}
-//		}
-//		config.close();
-//	}
-//
-//	else {
-//		cout << "No config found. Creating one..." << endl;
-//
-//		string create_conf = R"(
-//# - comment
-//# Please if you set custom alphabet dont set <space> as first symbol in sequence (Right way: @%#*+=-:. ). In this example space is last symbol
-//# Specify alphabet in black -> white (Example: @MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry%1v7l+it[] {}?j|()=~!-/<>\"^_';,:`. )
-//# Frame duration is an int (milliseconds)
-//# cycle - true/false (cycles video until program closed)
-//
-//# Some basic alphabets
-//# Best in most cases: @%#*+=-:. 
-//# The longest one: @MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry%1v7l+it[] {}?j|()=~!-/<>\"^_';,:`. 
-//# Just another one: !@#%&.+-=
-//# And another: $@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\ 
-//
-//alphabet = 
-//
-//frame_duration = 5
-//
-//cycle = 
-//
-//		)";
-//		fstream config(path, ios_base::out);
-//
-//		config << create_conf << endl;
-//		config.close();
-//	}
-//
-//	
-//}
-
-
 string pix2ASCII(int pixel_intensity) {
 	string ASCII_alp = "@%#*+=-:. ";
-	//const string ASCII_alp = "!@#%&.+-=";
 	if (ascii_alphabet.length() > 2) {
 		ASCII_alp = ascii_alphabet;
 	}
+	// OTHER ASCII ALPHABETS, WHICH YOU CAN USE IF YOU WANT
 	//string ASCII_alp = "   \" .: -= +*# % @\"";
 	//string ASCII_alp = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\ ";
 	//string ASCII_alp = "@MBHENR#KWXDFPQASUZbdehx*8Gm&04LOVYkpq5Tagns69owz$CIu23Jcfry%1v7l+it[] {}?j|()=~!-/<>\"^_';,:`. ";
@@ -91,6 +30,7 @@ string pix2ASCII(int pixel_intensity) {
 	string s = string(1, ASCII_alp[pixel_intensity * ASCII_alp.length() / 256]); //getting symbol index and making string
 	return s;
 }
+
 void ShowConsoleCursor(bool showFlag)
 {
 	HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -102,13 +42,55 @@ void ShowConsoleCursor(bool showFlag)
 	SetConsoleCursorInfo(out, &cursorInfo);
 }
 
+void GetDesktopResolution(int& horizontal, int& vertical)
+{
+	RECT desktop;
+	const HWND hDesktop = GetDesktopWindow();
+	GetWindowRect(hDesktop, &desktop);
+	horizontal = desktop.right;
+	vertical = desktop.bottom;
+}
+
+void SetConsoleFontSize(int width, int height) {
+
+	CONSOLE_FONT_INFOEX cfi;
+	cfi.cbSize = sizeof(cfi);
+	cfi.nFont = 0;
+	cfi.FontFamily = FF_DONTCARE;
+	cfi.FontWeight = FW_NORMAL;
+	std::wcscpy(cfi.FaceName, L"Consolas"); // Choose your font
+	SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), FALSE, &cfi);
+
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	cfi.cbSize = sizeof(CONSOLE_FONT_INFOEX);
+	if (!GetCurrentConsoleFontEx(hConsole, FALSE, &cfi)) {
+		std::cerr << "Failed to get console font info" << std::endl;
+		return;
+	}
+	cfi.dwFontSize.X = width;
+	cfi.dwFontSize.Y = height;
+	if (!SetCurrentConsoleFontEx(hConsole, FALSE, &cfi)) {
+		std::cerr << "Failed to set console font info" << std::endl;
+		return;
+	}
+
+}
+
+void Set_Console_Size(int width, int height, int x, int y) {
+	
+	SetConsoleFontSize(2, 2);
+
+	HWND console = GetConsoleWindow();
+	
+	SetWindowPos(console, 0, 1, 1, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+
+	MoveWindow(console, x, y, width, height, TRUE);
+}
+
 vector<string> Convert(string video_path) {
 	vector<string> result;
 
 	cv::VideoCapture cap(video_path);
-	//getchar();
-	int width = 675;
-	int height = 225;
 	cv::Mat frame, gray_frame, resized;
 	double fps = cap.get(cv::CAP_PROP_FPS);
 	if(frame_dur == -1) frame_dur = 1000 / fps;
@@ -128,7 +110,6 @@ vector<string> Convert(string video_path) {
 			}
 			ascii_frame += "\n";
 		}
-		//cout << ascii_frame;
 		result.push_back(ascii_frame);
 		this_thread::sleep_for(chrono::milliseconds(10));
 	}
@@ -149,38 +130,85 @@ void clearscreen()
 
 int main()
 {
-	//read_config("config.txt");
-	int choose_video;
+	int choose_video, change_scale;
+	int desktop_hor = 0, desktop_ver = 0;
+	GetDesktopResolution(desktop_hor, desktop_ver);
 	vector<string> paths;
-	for (const auto& entry : filesystem::directory_iterator(videos_folder)) {
-		paths.push_back(entry.path().string());
-	}
+	vector<string> converted;
+	string video_path;
+	try {
+		
+		for (const auto& entry : filesystem::directory_iterator(videos_folder)) {
+			paths.push_back(entry.path().string());
+		}
 
-	for (int i = 0; i < paths.size(); i++) {
-		cout << i << ". " << paths[i] << endl;
+		for (int i = 0; i < paths.size(); i++) {
+			cout << i << ". " << paths[i] << endl;
+		}
 	}
+	catch (exception e){
+		cout << "Can\'t parse \"videos\" directory.\nCheck that program and \"videos\" folder are in the same directory." << endl;
+		system("pause");
+		return 0;
+	}
+	
 
 	cout << "Choose video file: ";
 	cin >> choose_video;
-	
-
-	string video_path = paths[choose_video]; //vid02_02.mp4 vid02.mp4
-	vector<string> converted = Convert(video_path);
-	if (cycle) {
-		while (true) {
+	cout << "Change width/height default values (width: 540; height: 180)?\n[1 - Y / 2 - N]:" << endl;
+	cin >> change_scale;
+	switch (change_scale)
+	{
+	case 1:
+		cout << "Width: ";
+		cin >> width;
+		cout << "Height: ";
+		cin >> height;
+		Set_Console_Size(desktop_hor - 5, desktop_ver - 5, 0, 0);
+		video_path = paths[choose_video];
+		converted = Convert(video_path);
+		system("cls");
+		if (cycle) {
+			while (true) {
+				for (string s : converted) {
+					cout << s;
+					this_thread::sleep_for(chrono::milliseconds(frame_dur));
+					clearscreen();
+				}
+			}
+		}
+		else {
 			for (string s : converted) {
 				cout << s;
 				this_thread::sleep_for(chrono::milliseconds(frame_dur));
 				clearscreen();
 			}
 		}
-	}
-	else {
-		for (string s : converted) {
-			cout << s;
-			this_thread::sleep_for(chrono::milliseconds(frame_dur));
-			clearscreen();
+		break;
+	case 2:
+		Set_Console_Size(desktop_hor - 5, desktop_ver - 5, 0, 0);
+		video_path = paths[choose_video];
+		converted = Convert(video_path);
+		system("cls");
+		if (cycle) {
+			while (true) {
+				for (string s : converted) {
+					cout << s;
+					this_thread::sleep_for(chrono::milliseconds(frame_dur));
+					clearscreen();
+				}
+			}
 		}
+		else {
+			for (string s : converted) {
+				cout << s;
+				this_thread::sleep_for(chrono::milliseconds(frame_dur));
+				clearscreen();
+			}
+		}
+		break;
+	default:
+		break;
 	}
 	system("pause");
 	return 0;
